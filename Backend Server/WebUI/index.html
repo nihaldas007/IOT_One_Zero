@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Driver Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: {
+                            DEFAULT: '#f59e0b', // Amber 500
+                            dark: '#d97706', // Amber 600
+                        },
+                    }
+                },
+            },
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .panel {
+            display: none;
+        }
+        .panel.active {
+            display: block;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+
+    <div class="bg-white rounded-2xl shadow-xl p-6 pt-5 w-full max-w-md">
+        <div class="text-center mb-4 border-b pb-4">
+            <h1 class="text-2xl font-bold text-gray-800">Driver Dashboard</h1>
+            <p class="text-sm text-gray-500">
+                Driver ID: <span id="driver-id" class="font-mono bg-gray-100 p-1 rounded">...</span>
+            </p>
+        </div>
+
+        <div id="dashboard-content" class="space-y-6">
+
+            <div id="panel-loading" class="panel active text-center text-gray-500">
+                <div class="flex justify-center items-center h-48">
+                    <svg class="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span class="ml-3 text-lg">Connecting to service...</span>
+                </div>
+            </div>
+            
+            <div id="panel-idle" class="panel text-center text-gray-500">
+                <div class="flex flex-col justify-center items-center h-48">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                    <h2 class="text-xl font-semibold mt-4">Waiting for new requests...</h2>
+                    <p class="mt-1">You are online and ready to go.</p>
+                </div>
+            </div>
+
+            <div id="panel-request" class="panel space-y-4">
+                <div class="text-center">
+                    <h2 class="text-2xl font-bold text-blue-600">New Ride Request!</h2>
+                    <p class="text-gray-600">A new customer is waiting.</p>
+                </div>
+                
+                <div class="border rounded-lg p-4 space-y-3">
+                    <div>
+                        <span class="text-xs font-semibold text-gray-500 uppercase">Pickup</span>
+                        <p id="request-pickup" class="text-lg font-medium text-gray-900">...</p>
+                    </div>
+                    <div>
+                        <span class="text-xs font-semibold text-gray-500 uppercase">Dropoff</span>
+                        <p id="request-dropoff" class="text-lg font-medium text-gray-900">...</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <button id="btn-reject" class="w-full bg-red-500 text-white font-bold py-3 px-4 rounded-lg shadow-md hover:bg-red-600 transition duration-200">
+                        Reject
+                    </button>
+                    <button id="btn-accept" class="w-full bg-green-500 text-white font-bold py-3 px-4 rounded-lg shadow-md hover:bg-green-600 transition duration-200">
+                        Accept
+                    </button>
+                </div>
+            </div>
+
+            <div id="panel-pickup" class="panel space-y-4">
+                <div class="text-center">
+                    <h2 class="text-2xl font-bold text-primary-dark">Ride Accepted!</h2>
+                    <p class="text-gray-600">Please proceed to the pickup location.</p>
+                </div>
+
+                <div class="border rounded-lg p-4 space-y-3 bg-gray-50">
+                    <div>
+                        <span class="text-xs font-semibold text-gray-500 uppercase">Pickup Location</span>
+                        <p id="pickup-location" class="text-lg font-medium text-gray-900">...</p>
+                    </div>
+                </div>
+                
+                <button id="btn-pickup" class="w-full bg-blue-500 text-white font-bold py-3 px-4 rounded-lg shadow-md hover:bg-blue-600 transition duration-200">
+                    Confirm Pickup
+                </button>
+            </div>
+
+            <div id="panel-dropoff" class="panel space-y-4">
+                <div class="text-center">
+                    <h2 class="text-2xl font-bold text-indigo-600">Ride in Progress</h2>
+                    <p class="text-gray-600">Drive safely to the destination.</p>
+                </div>
+
+                <div class="border rounded-lg p-4 space-y-3 bg-gray-50">
+                    <div>
+                        <span class="text-xs font-semibold text-gray-500 uppercase">Destination</span>
+                        <p id="dropoff-location" class="text-lg font-medium text-gray-900">...</p>
+                    </div>
+                </div>
+                
+                <button id="btn-dropoff" class="w-full bg-indigo-500 text-white font-bold py-3 px-4 rounded-lg shadow-md hover:bg-indigo-600 transition duration-200">
+                    Confirm Dropoff
+                </button>
+            </div>
+            
+        </div>
+        
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { 
+            getFirestore, 
+            doc, 
+            onSnapshot,
+            setDoc,
+            updateDoc,
+            serverTimestamp,
+            setLogLevel 
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyD0hOasCnqllLfac7NGqm7cSQlvYnaU-ro",
+            authDomain: "rickshaw-puller-71731.firebaseapp.com",
+            projectId: "rickshaw-puller-71731",
+            storageBucket: "rickshaw-puller-71731.firebasestorage.app",
+            messagingSenderId: "676332991701",
+            appId: "1:676332991701:web:690f7817d9b5a8c3c49e5c",
+            measurementId: "G-0CFJRXFESQ"
+        };
+        
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+        const panels = {
+            loading: document.getElementById('panel-loading'),
+            idle: document.getElementById('panel-idle'),
+            request: document.getElementById('panel-request'),
+            pickup: document.getElementById('panel-pickup'),
+            dropoff: document.getElementById('panel-dropoff'),
+        };
+        const driverIdEl = document.getElementById('driver-id');
+        
+        const requestPickupEl = document.getElementById('request-pickup');
+        const requestDropoffEl = document.getElementById('request-dropoff');
+        const acceptButton = document.getElementById('btn-accept');
+        const rejectButton = document.getElementById('btn-reject');
+
+        const pickupLocationEl = document.getElementById('pickup-location');
+        const pickupButton = document.getElementById('btn-pickup');
+        
+        const dropoffLocationEl = document.getElementById('dropoff-location');
+        const dropoffButton = document.getElementById('btn-dropoff');
+        
+        let db;
+        let userId;
+        let rideRef;
+        
+        function showPanel(panelName) {
+            console.log(`Switching to panel: ${panelName}`);
+            Object.values(panels).forEach(panel => {
+                panel.classList.remove('active');
+            });
+            if (panels[panelName]) {
+                panels[panelName].classList.add('active');
+            } else {
+                console.error(`Panel "${panelName}" does not exist.`);
+                panels.idle.classList.add('active');
+            }
+        }
+
+        function updateUI(rideData) {
+            const status = rideData?.status || 'idle'; 
+            
+            switch (status) {
+                case 'requesting':
+                    requestPickupEl.textContent = rideData.pickup_location || 'Unknown';
+                    requestDropoffEl.textContent = rideData.dropoff_location || 'Unknown';
+                    showPanel('request');
+                    break;
+
+                case 'accepted':
+                    pickupLocationEl.textContent = rideData.pickup_location || 'Unknown';
+                    showPanel('pickup');
+                    break;
+
+                case 'in_progress':
+                    dropoffLocationEl.textContent = rideData.dropoff_location || 'Unknown';
+                    showPanel('dropoff');
+                    break;
+                
+                case 'idle':
+                case 'rejected': // --- ADDED --- Go to idle if rejected
+                default:
+                    showPanel('idle');
+                    break;
+            }
+        }
+
+        function setupRideListener() {
+            if (!db || !userId) {
+                console.error("Firestore or UserID not available for listener.");
+                return;
+            }
+            
+            const docPath = `artifacts/${appId}/public/data/rides/${userId}`;
+            rideRef = doc(db, docPath);
+            console.log(`Setting up listener for document: ${docPath}`);
+
+            onSnapshot(rideRef, (doc) => {
+                if (doc.exists()) {
+                    const rideData = doc.data();
+                    console.log("Received ride data update: ", rideData);
+                    updateUI(rideData);
+                } else {
+                    console.log("No ride document, setting to idle.");
+                    updateUI({ status: 'idle' });
+                }
+            }, (error) => {
+                console.error("Error listening to ride document:", error);
+                showPanel('loading');
+            });
+        }
+
+        async function initializeDashboard() {
+            try {
+                if (!firebaseConfig.apiKey) {
+                    throw new Error("Firebase config is missing.");
+                }
+
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                setLogLevel('Debug'); 
+                console.log("Firebase Initialized.");
+
+                userId = "pkO9SyuhD4asdw2PoeWxd9Kqr3y1";
+                driverIdEl.textContent = userId;
+                console.log("Using fixed User ID:", userId);
+
+                setupRideListener();
+
+            } catch (error) {
+                console.error("Error initializing dashboard:", error);
+                document.getElementById('dashboard-content').innerHTML = `
+                    <div class="text-center text-red-500">
+                        <h2 class="font-bold text-lg">Connection Error</h2>
+                        <p class="text-sm">${error.message}</p>
+                    </div>`;
+            }
+        }
+        
+        acceptButton.onclick = async () => {
+            console.log("Ride Accepted");
+            await updateDoc(rideRef, {
+                status: "accepted"
+            });
+        };
+        
+        rejectButton.onclick = async () => {
+            console.log("Ride Rejected");
+            await setDoc(rideRef, {
+                status: "rejected", 
+                last_updated: serverTimestamp()
+            }); 
+        };
+        
+        pickupButton.onclick = async () => {
+            console.log("Customer Picked Up");
+            await updateDoc(rideRef, {
+                status: "in_progress"
+            });
+        };
+        
+        dropoffButton.onclick = async () => {
+            console.log("Customer Dropped Off / Ride Complete");
+            await setDoc(rideRef, {
+                status: "idle",
+                last_updated: serverTimestamp()
+            });
+        };
+
+        // This block was causing the error and has been removed.
+        /*
+        demoButton.onclick = async () => {
+            if (!rideRef) {
+                alert("App is not connected yet, please wait.");
+                return;
+            }
+            console.log("Simulating new request...");
+            await setDoc(rideRef, {
+                status: "requesting",
+                request_id: `demo-${Date.now()}`,
+                pickup_location: "City Center Plaza",
+                dropoff_location: "Grand Railway Station",
+                created_at: serverTimestamp()
+            });
+        };
+        */
+
+        initializeDashboard();
+
+    </script>
+</body>
+</html>
